@@ -10,14 +10,22 @@ module.exports = (sequelize, DataTypes) => {
 
   Transaction.init(
     {
-      accountId: DataTypes.UUID,
+      accountId: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+      },
       type: DataTypes.STRING,
-      amount: DataTypes.DECIMAL(12,2),
+      amount: DataTypes.DECIMAL(12, 2),
       description: DataTypes.STRING
     },
     {
       sequelize,
-      modelName: 'Transaction'
+      modelName: 'Transaction',
+      id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+      }
     }
   );
 

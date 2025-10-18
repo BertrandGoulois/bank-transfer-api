@@ -2,8 +2,17 @@
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('Transactions', {
-      id: { allowNull: false, primaryKey: true, type: Sequelize.UUID, defaultValue: Sequelize.literal('gen_random_uuid()') },
-      accountId: { type: Sequelize.UUID, references: { model: 'Accounts', key: 'id' }, allowNull: false },
+      id: { 
+        allowNull: false, 
+        primaryKey: true, 
+        type: Sequelize.INTEGER, 
+        autoIncrement: true 
+      },
+      accountId: { 
+        type: Sequelize.INTEGER, 
+        references: { model: 'Accounts', key: 'id' }, 
+        allowNull: false 
+      },
       type: { type: Sequelize.STRING, allowNull: false },
       amount: { type: Sequelize.DECIMAL(12,2), allowNull: false },
       description: { type: Sequelize.STRING },
