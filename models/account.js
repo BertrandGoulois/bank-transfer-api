@@ -11,13 +11,21 @@ module.exports = (sequelize, DataTypes) => {
 
   Account.init(
     {
-      userId: DataTypes.UUID,
-      balance: { type: DataTypes.DECIMAL(12,2), defaultValue: 0 },
+      userId: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+      },
+      balance: { type: DataTypes.DECIMAL(12, 2), defaultValue: 0 },
       type: DataTypes.STRING
     },
     {
       sequelize,
-      modelName: 'Account'
+      modelName: 'Account',
+      id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+      }
     }
   );
 

@@ -1,8 +1,9 @@
 const { transfer } = require('../services/accountService');
 
 async function postTransfer(req, res) {
-  const { fromAccountId } = req.params;
-  const { toAccountId, amount } = req.body;
+  const fromAccountId = parseInt(req.params.fromAccountId, 10);
+  const toAccountId = parseInt(req.body.toAccountId, 10);
+  const amount = parseFloat(req.body.amount);
 
   if (fromAccountId === toAccountId) {
     return res.status(400).json({ error: 'Les deux comptes ne peuvent être identiques' });
@@ -12,7 +13,10 @@ async function postTransfer(req, res) {
     const result = await transfer(fromAccountId, toAccountId, amount);
     res.status(200).json(result);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    console.log('Caught error in controller:', err);
+    const status = typeof err.status === 'number' ? err.status : 500;
+    const error = err.error || err.message || 'Internal server error';
+    res.status(status).json({ error });
   }
 }
 
