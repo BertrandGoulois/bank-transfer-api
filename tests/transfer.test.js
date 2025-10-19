@@ -1,46 +1,20 @@
 const request = require('supertest');
 const app = require('../server');
-const { sequelize } = require('../models');
+const { sequelize, User, Account } = require('../models');
 
 let fromAccountId, toAccountId;
 
 beforeAll(async () => {
+  await sequelize.sync({ force: true });
 
-  await sequelize.query(
-    `truncate table "Users" RESTART IDENTITY CASCADE;`, { type : sequelize.QueryTypes.RAW}
-  );
-  await sequelize.query(
-    `truncate table "Accounts" RESTART IDENTITY CASCADE;`, { type : sequelize.QueryTypes.RAW}
-  );
+  const user1 = await User.create({ name: 'Bertrand', email: 'bertrand@mail.com' });
+  const user2 = await User.create({ name: 'Jean', email: 'jean@mail.com' });
 
-  await sequelize.query(
-    `truncate table "Transactions" RESTART IDENTITY CASCADE;`, { type : sequelize.QueryTypes.RAW}
-  );
+  const account1 = await Account.create({ userId: user1.id, type: 'checking', balance: 500 });
+  const account2 = await Account.create({ userId: user2.id, type: 'checking', balance: 300 });
 
-  const [user1] = await sequelize.query(
-    `INSERT INTO "Users" (name, email, "createdAt","updatedAt") 
-     VALUES ('Bertrand','bertrand@mail.com',NOW(),NOW()) RETURNING id`,
-    { type: sequelize.QueryTypes.INSERT }
-  );
-  const [user2] = await sequelize.query(
-    `INSERT INTO "Users" (name, email, "createdAt","updatedAt") 
-     VALUES ('Jean','jean@mail.com',NOW(),NOW()) RETURNING id`,
-    { type: sequelize.QueryTypes.INSERT }
-  );
-
-  const [account1] = await sequelize.query(
-    `INSERT INTO "Accounts" ("userId","type","balance","createdAt","updatedAt") 
-     VALUES (:userId,'checking',500,NOW(),NOW()) RETURNING id`,
-    { replacements: { userId: user1[0].id }, type: sequelize.QueryTypes.INSERT }
-  );
-  const [account2] = await sequelize.query(
-    `INSERT INTO "Accounts" ("userId","type","balance","createdAt","updatedAt") 
-     VALUES (:userId,'checking',300,NOW(),NOW()) RETURNING id`,
-    { replacements: { userId: user2[0].id }, type: sequelize.QueryTypes.INSERT }
-  );
-
-  fromAccountId = account1[0].id;
-  toAccountId = account2[0].id;
+  fromAccountId = account1.id;
+  toAccountId = account2.id;
 });
 
 describe('Transfer endpoint', () => {
@@ -83,14 +57,8 @@ describe('Transfer endpoint', () => {
   test('should succeed and update balances', async () => {
     const amount = 50;
 
-    const beforeFrom = await sequelize.query(
-      `SELECT balance FROM "Accounts" WHERE id = :id`,
-      { replacements: { id: fromAccountId }, type: sequelize.QueryTypes.SELECT }
-    );
-    const beforeTo = await sequelize.query(
-      `SELECT balance FROM "Accounts" WHERE id = :id`,
-      { replacements: { id: toAccountId }, type: sequelize.QueryTypes.SELECT }
-    );
+    const beforeFrom = await Account.findByPk(fromAccountId);
+    const beforeTo = await Account.findByPk(toAccountId);
 
     const res = await request(app)
       .post(`/accounts/${fromAccountId}/transfer`)
@@ -99,17 +67,10 @@ describe('Transfer endpoint', () => {
     expect(res.status).toBe(200);
     expect(res.body.message).toBe('Transfert réussi');
 
-    const afterFrom = await sequelize.query(
-      `SELECT balance FROM "Accounts" WHERE id = :id`,
-      { replacements: { id: fromAccountId }, type: sequelize.QueryTypes.SELECT }
-    );
-    const afterTo = await sequelize.query(
-      `SELECT balance FROM "Accounts" WHERE id = :id`,
-      { replacements: { id: toAccountId }, type: sequelize.QueryTypes.SELECT }
-    );
+    const afterFrom = await Account.findByPk(fromAccountId);
+    const afterTo = await Account.findByPk(toAccountId);
 
-    expect(parseFloat(afterFrom[0].balance)).toBe(parseFloat(beforeFrom[0].balance) - amount);
-    expect(parseFloat(afterTo[0].balance)).toBe(parseFloat(beforeTo[0].balance) + amount);
+    expect(parseFloat(afterFrom.balance)).toBe(parseFloat(beforeFrom.balance) - amount);
+    expect(parseFloat(afterTo.balance)).toBe(parseFloat(beforeTo.balance) + amount);
   });
-
 });
