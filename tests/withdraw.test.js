@@ -14,12 +14,39 @@ beforeAll(async () => {
 });
 
 describe('Withdrawal endpoint', () => {
-  test('should reach withdrawal endpoint', async () => {
+  test('should fail if account id not a number', async () => {
+    const res = await request(app)
+      .post(`/accounts/notANumber/withdraw`)
+      .send({ amount : 10});
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('Identifiant de compte invalide');
+  });
+
+  test('should fail if amount not a number', async () => {
     const res = await request(app)
       .post(`/accounts/${accountId}/withdraw`)
-      .send({ amount: 10 });
+      .send({ amount: 'notANumber' });
 
-    expect(res.status).toBe(200);
-    expect(res.body.message).toBe('Endpoint withdraw atteint');
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('Montant invalide');
+  });
+
+  test(`should fail if account does not exist`, async() => {
+    const res = await request(app)
+      .post(`/accounts/9999/withdraw`)
+      .send({ amount : 10});
+
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBe('Compte introuvable');
+  });
+
+  test('should fail if source has insufficient balance', async () => {
+    const res = await request(app)
+      .post(`/accounts/${accountId}/withdraw`)
+      .send({ amount: 9999 });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('Solde insuffisant');
   });
 });

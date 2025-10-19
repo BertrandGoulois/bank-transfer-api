@@ -18,6 +18,30 @@ beforeAll(async () => {
 });
 
 describe('Transfer endpoint', () => {
+  test('should fail if source account id not a number', async () => {
+    const res = await request(app)
+      .post(`/accounts/notANumber/transfer`)
+      .send({ toAccountId: toAccountId, amount: 50 });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('Identifiant de compte source invalide');
+  });
+  test('should fail if destination account id not a number', async () => {
+    const res = await request(app)
+      .post(`/accounts/${fromAccountId}/transfer`)
+      .send({ toAccountId: 'notANumber', amount: 50 });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('Identifiant de compte destination invalide');
+  });
+  test('should fail if amount not a number', async () => {
+    const res = await request(app)
+      .post(`/accounts/${fromAccountId}/transfer`)
+      .send({ toAccountId: toAccountId, amount: 'notANumber' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('Montant invalide');
+  });
   test('should fail if accounts are the same', async () => {
     const res = await request(app)
       .post(`/accounts/${fromAccountId}/transfer`)
