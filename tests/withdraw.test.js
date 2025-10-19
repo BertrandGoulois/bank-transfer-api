@@ -5,64 +5,64 @@ const { sequelize, User, Account } = require('../models');
 let accountId;
 
 beforeAll(async () => {
-  await sequelize.sync({ force: true });
+    await sequelize.sync({ force: true });
 
-  const user1 = await User.create({ name: 'Bertrand', email: 'bertrand@mail.com' });
-  const account1 = await Account.create({ userId: user1.id, type: 'checking', balance: 500 });
+    const user1 = await User.create({ name: 'Bertrand', email: 'bertrand@mail.com' });
+    const account1 = await Account.create({ userId: user1.id, type: 'checking', balance: 500 });
 
-  accountId = account1.id;
+    accountId = account1.id;
 });
 
 describe('Withdrawal endpoint', () => {
-  test('should fail if account id not a number', async () => {
-    const res = await request(app)
-      .post(`/accounts/notANumber/withdraw`)
-      .send({ amount : 10});
+    test('should fail if account id not a number', async () => {
+        const res = await request(app)
+            .post(`/accounts/notANumber/withdraw`)
+            .send({ amount: 10 });
 
-    expect(res.status).toBe(400);
-    expect(res.body.error).toBe('Identifiant de compte invalide');
-  });
+        expect(res.status).toBe(400);
+        expect(res.body.error).toBe('Identifiant de compte invalide');
+    });
 
-  test('should fail if amount not a number', async () => {
-    const res = await request(app)
-      .post(`/accounts/${accountId}/withdraw`)
-      .send({ amount: 'notANumber' });
+    test('should fail if amount not a number', async () => {
+        const res = await request(app)
+            .post(`/accounts/${accountId}/withdraw`)
+            .send({ amount: 'notANumber' });
 
-    expect(res.status).toBe(400);
-    expect(res.body.error).toBe('Montant invalide');
-  });
+        expect(res.status).toBe(400);
+        expect(res.body.error).toBe('Montant invalide');
+    });
 
-  test(`should fail if account does not exist`, async() => {
-    const res = await request(app)
-      .post(`/accounts/9999/withdraw`)
-      .send({ amount : 10});
+    test(`should fail if account does not exist`, async () => {
+        const res = await request(app)
+            .post(`/accounts/9999/withdraw`)
+            .send({ amount: 10 });
 
-    expect(res.status).toBe(404);
-    expect(res.body.error).toBe('Compte introuvable');
-  });
+        expect(res.status).toBe(404);
+        expect(res.body.error).toBe('Compte introuvable');
+    });
 
-  test('should fail if source has insufficient balance', async () => {
-    const res = await request(app)
-      .post(`/accounts/${accountId}/withdraw`)
-      .send({ amount: 9999 });
+    test('should fail if source has insufficient balance', async () => {
+        const res = await request(app)
+            .post(`/accounts/${accountId}/withdraw`)
+            .send({ amount: 9999 });
 
-    expect(res.status).toBe(400);
-    expect(res.body.error).toBe('Solde insuffisant');
-  });
-  test('should succeed and update balance from account', async () => {
-    const amount = 50;
+        expect(res.status).toBe(400);
+        expect(res.body.error).toBe('Solde insuffisant');
+    });
+    test('should succeed and update balance from account', async () => {
+        const amount = 50;
 
-    const from = await Account.findByPk(accountId);
+        const from = await Account.findByPk(accountId);
 
-    const res = await request(app)
-      .post(`/accounts/${accountId}/withdraw`)
-      .send({ amount });
+        const res = await request(app)
+            .post(`/accounts/${accountId}/withdraw`)
+            .send({ amount });
 
-    expect(res.status).toBe(200);
-    expect(res.body.message).toBe('Retrait réussi');
+        expect(res.status).toBe(200);
+        expect(res.body.message).toBe('Retrait réussi');
 
-    const afterFrom = await Account.findByPk(accountId);
+        const afterFrom = await Account.findByPk(accountId);
 
-    expect(parseFloat(afterFrom.balance)).toBe(parseFloat(from.balance) - amount);
-  });
+        expect(parseFloat(afterFrom.balance)).toBe(parseFloat(from.balance) - amount);
+    });
 });
