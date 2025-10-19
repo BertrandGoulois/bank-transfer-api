@@ -1,6 +1,10 @@
 # API Bancaire Node.js
 
-Cette API démontre, via l'historique des commits, la réalisation d'une application bancaire en Node.js avec des endpoints REST. Le projet suit la méthodologie **Test Driven Development (TDD)** et utilise **Sequelize**, **Express**, **Jest**, et **PostgreSQL**.
+Cette API illustre la conception d’une application bancaire en Node.js exposant des endpoints REST. Le projet suit la méthodologie **Test Driven Development (TDD)** et utilise **Sequelize**, **Express**, **Jest** et **PostgreSQL**.
+
+Chaque commit a été pensé pour tracer ma démarche de développement, tant par son intitulé clair que par le contenu détaillé, permettant de suivre l’évolution des fonctionnalités, des tests et des corrections.
+
+Elle sert à démontrer ma capacité à concevoir, tester et sécuriser des transactions financières de manière structurée et maintenable.
 
 ---
 
@@ -14,7 +18,9 @@ Cette API démontre, via l'historique des commits, la réalisation d'une applica
 
 ---
 
-## Installation
+## Installation & Configuration
+
+1. Cloner le projet :
 
 ```bash
 git clone <repository-url>
@@ -22,15 +28,25 @@ cd bank-transfer-api
 npm install
 ```
 
-### Lancement
+2. Adapter `config/config.json` avec vos paramètres PostgreSQL (`user`, `password`, `host`, `port`, `database`) pour chaque environnement (`development`, `test`, `production`).
 
-* **Mode développement** :
+3. Peupler la base avec des données d’exemple :
+
+```bash
+npm run seed
+```
+
+---
+
+## Lancement
+
+* **Mode développement** :
 
 ```bash
 npm start dev
 ```
 
-* **Tests unitaires** :
+* **Tests unitaires** :
 
 ```bash
 npm start test
@@ -52,11 +68,7 @@ npm start test
 }
 ```
 
-* **Cas d'erreurs** :
-
-  * Compte source introuvable → `404`
-  * Compte destination introuvable → `404`
-  * Solde insuffisant → `400`
+* **Cas d'erreurs** : compte source ou destination introuvable (`404`), solde insuffisant (`400`).
 
 ---
 
@@ -71,10 +83,7 @@ npm start test
 }
 ```
 
-* **Cas d'erreurs** :
-
-  * Compte introuvable → `404`
-  * Solde insuffisant → `400`
+* **Cas d'erreurs** : compte introuvable (`404`), solde insuffisant (`400`).
 
 ---
 
@@ -85,49 +94,33 @@ npm start test
 
 ```json
 {
-    "transactions": [
-        {
-            "id": 1,
-            "type": "deposit",
-            "amount": 100,
-            "description": "Initial deposit",
-            "createdAt": "2025-10-19T12:00:00Z"
-        }
-    ],
+    "transactions": [ ... ],
     "metrics": {
         "averageAmount": 75,
-        "byType": {
-            "deposit": 2,
-            "withdrawal": 1
-        },
-        "byDay": {
-            "2025-10-19": 3
-        }
+        "byType": { "deposit": 2, "withdrawal": 1 },
+        "byDay": { "2025-10-19": 3 }
     }
 }
 ```
 
-* **Cas d'erreurs** :
-
-  * Compte introuvable → `404`
+* **Cas d'erreurs** : compte introuvable (`404`).
 
 ---
 
-## Fonctionnalités
+## Fonctionnalités clés
 
 * Gestion complète des transactions : transfert et retrait
-* Historique des transactions avec statistiques synthétiques :
-
-  * Montant moyen
-  * Nombre par type (deposit/withdrawal)
-  * Nombre par jour
-* Suivi TDD avec Jest
-* Sécurité des transactions via `FOR UPDATE` et rollback en cas d’erreur
+* Historique avec statistiques synthétiques (montant moyen, nombre par type et par jour)
+* Sécurité transactionnelle via `FOR UPDATE` et rollback en cas d’erreur
+* Suivi TDD avec Jest pour validation complète des cas normaux et erreurs
+* Utilisation de seeds pour initialiser rapidement la base de données
 
 ---
 
-## Notes
+## Objectif démonstratif
 
-* Les transactions sont sauvegardées dans PostgreSQL avec Sequelize.
-* Les erreurs retournent un JSON standard `{ error: "message" }` avec le code HTTP correspondant.
-* Les tests unitaires valident à la fois les cas normaux et les erreurs.
+Ce projet est un support pour montrer :
+
+* Ma capacité à concevoir des endpoints REST sécurisés et testés
+* Ma maîtrise de Sequelize pour la gestion transactionnelle
+* Mon approche TDD pour produire un code fiable et maintenable
