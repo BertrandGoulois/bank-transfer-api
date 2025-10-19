@@ -49,4 +49,20 @@ describe('Withdrawal endpoint', () => {
     expect(res.status).toBe(400);
     expect(res.body.error).toBe('Solde insuffisant');
   });
+  test('should succeed and update balance from account', async () => {
+    const amount = 50;
+
+    const from = await Account.findByPk(accountId);
+
+    const res = await request(app)
+      .post(`/accounts/${accountId}/withdraw`)
+      .send({ amount });
+
+    expect(res.status).toBe(200);
+    expect(res.body.message).toBe('Retrait réussi');
+
+    const afterFrom = await Account.findByPk(accountId);
+
+    expect(parseFloat(afterFrom.balance)).toBe(parseFloat(from.balance) - amount);
+  });
 });
