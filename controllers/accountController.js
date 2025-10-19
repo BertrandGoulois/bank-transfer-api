@@ -49,13 +49,20 @@ async function postWithdrawal(req, res) {
   }
 }
 
-async function getHistory(req, res){
-  const { accountId } = req.params;
+async function getHistory(req, res) {
+  const accountId = Number(req.params.accountId);
+
+  if (!Number.isInteger(accountId) || accountId <= 0)
+    return res.status(400).json({ error: 'Identifiant de compte invalide' });
+
   try {
     const result = await history(accountId);
     res.status(200).json(result);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    console.log('Caught error in controller:', err);
+    const status = typeof err.status === 'number' ? err.status : 500;
+    const error = err.error || err.message || 'Internal server error';
+    res.status(status).json({ error });
   }
 }
 

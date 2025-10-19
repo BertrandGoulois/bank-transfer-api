@@ -55,10 +55,10 @@ async function transfer(fromAccountId, toAccountId, amount) {
 }
 
 
-async function withdraw(accountId, amount){
+async function withdraw(accountId, amount) {
   console.log(`Withdraw service called: from ${accountId}, amount ${amount}`);
   const t = await sequelize.transaction();
-  try{
+  try {
     const [fromAccount] = await sequelize.query(
       `SELECT * FROM "Accounts" WHERE id = $id FOR UPDATE`,
       { bind: { id: accountId }, type: sequelize.QueryTypes.SELECT, transaction: t }
@@ -83,16 +83,29 @@ async function withdraw(accountId, amount){
     console.log(`Withdrawal completed on account ${accountId} , amount ${amount}`);
 
     return { message: 'Retrait réussi', accountId, amount: amount };
-  } catch(err) {
+  } catch (err) {
     if (!t.finished) await t.rollback();
     console.error('Withdraw failed:', err);
     throw err;
   }
 }
 
-async function history(accountId){
+async function history(accountId) {
   console.log(`History service called for account id  ${accountId}`);
-  return { message: 'Endpoint history atteint' };
+  const t = await sequelize.transaction();
+  try {
+    const [fromAccount] = await sequelize.query(
+      `SELECT * FROM "Accounts" WHERE id = $id FOR UPDATE`,
+      { bind: { id: accountId }, type: sequelize.QueryTypes.SELECT, transaction: t }
+    );
+    if (!fromAccount) throw { status: 404, error: 'Compte introuvable' };
+
+    return { message: 'Endpoint history atteint' };
+  } catch (err) {
+    if (!t.finished) await t.rollback();
+    console.error('History failed:', err);
+    throw err;
+  }
 }
 
 module.exports = { transfer, withdraw, history };
