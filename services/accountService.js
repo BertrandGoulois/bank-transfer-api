@@ -57,4 +57,10 @@ async function transfer(fromAccountId, toAccountId, amount) {
   }
 }
 
-module.exports = { transfer };
+
+async function withdraw(AccountId, amount){
+  console.log(`Withdraw service called: from ${AccountId}, amount ${amount}`);
+  return { message: 'Endpoint withdraw atteint'};
+}
+
+module.exports = { transfer, withdraw };

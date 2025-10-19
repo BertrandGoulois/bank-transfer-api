@@ -5,7 +5,18 @@ const { sequelize } = require('../models');
 let fromAccountId, toAccountId;
 
 beforeAll(async () => {
-  // Insert users
+
+  await sequelize.query(
+    `truncate table "Users" RESTART IDENTITY CASCADE;`, { type : sequelize.QueryTypes.RAW}
+  );
+  await sequelize.query(
+    `truncate table "Accounts" RESTART IDENTITY CASCADE;`, { type : sequelize.QueryTypes.RAW}
+  );
+
+  await sequelize.query(
+    `truncate table "Transactions" RESTART IDENTITY CASCADE;`, { type : sequelize.QueryTypes.RAW}
+  );
+
   const [user1] = await sequelize.query(
     `INSERT INTO "Users" (name, email, "createdAt","updatedAt") 
      VALUES ('Bertrand','bertrand@mail.com',NOW(),NOW()) RETURNING id`,
@@ -17,7 +28,6 @@ beforeAll(async () => {
     { type: sequelize.QueryTypes.INSERT }
   );
 
-  // Insert accounts
   const [account1] = await sequelize.query(
     `INSERT INTO "Accounts" ("userId","type","balance","createdAt","updatedAt") 
      VALUES (:userId,'checking',500,NOW(),NOW()) RETURNING id`,
