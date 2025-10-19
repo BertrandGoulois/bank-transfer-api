@@ -91,7 +91,7 @@ async function withdraw(accountId, amount) {
 }
 
 async function history(accountId) {
-  console.log(`History service called for account id  ${accountId}`);
+  console.log(`History service called for account id ${accountId}`);
   const t = await sequelize.transaction();
   try {
     const [fromAccount] = await sequelize.query(
@@ -100,12 +100,38 @@ async function history(accountId) {
     );
     if (!fromAccount) throw { status: 404, error: 'Compte introuvable' };
 
-    return { message: 'Endpoint history atteint' };
+    const transactions = await sequelize.query(
+      `SELECT * FROM "Transactions" WHERE "accountId" = $id`,
+      { bind: { id: accountId }, type: sequelize.QueryTypes.SELECT, transaction: t }
+    );
+
+    const amounts = transactions.map(t => parseFloat(t.amount));
+    const averageAmount = amounts.length ? amounts.reduce((a, b) => a + b, 0) / amounts.length : 0;
+
+    const byType = transactions.reduce((acc, t) => {
+      acc[t.type] = (acc[t.type] || 0) + 1;
+      return acc;
+    }, {});
+
+    const byDay = transactions.reduce((acc, t) => {
+      const day = t.createdAt.toISOString().split('T')[0];
+      acc[day] = (acc[day] || 0) + 1;
+      return acc;
+    }, {});
+
+    await t.commit();
+
+    return {
+      message: 'Endpoint history atteint',
+      metrics: { averageAmount, byType, byDay },
+      transactions
+    };
   } catch (err) {
     if (!t.finished) await t.rollback();
     console.error('History failed:', err);
     throw err;
   }
 }
+
 
 module.exports = { transfer, withdraw, history };
