@@ -7,10 +7,10 @@ let accountId;
 beforeAll(async () => {
     await sequelize.sync({ force: true });
 
-    const user1 = await User.create({ name: 'Bertrand', email: 'bertrand@mail.com' });
-    const account1 = await Account.create({ userId: user1.id, type: 'checking', balance: 500 });
+    const user = await User.create({ name: 'Bertrand', email: 'bertrand@mail.com' });
+    const account = await Account.create({ userId: user.id, type: 'checking', balance: 500 });
 
-    accountId = account1.id;
+    accountId = account.id;
 });
 
 describe('Withdrawal endpoint', () => {
