@@ -68,6 +68,20 @@ async function withdraw(accountId, amount){
     if (parseFloat(fromAccount.balance) < amount)
       throw { status: 400, error: 'Solde insuffisant' };
 
+    await sequelize.query(
+      `UPDATE "Accounts" SET balance = balance - $amount, "updatedAt" = NOW() WHERE id = $id`,
+      { bind: { id: accountId, amount: amount }, transaction: t }
+    );
+
+    await sequelize.query(
+      `INSERT INTO "Transactions" ("accountId","type","amount","description","createdAt","updatedAt")
+       VALUES ($accountId,'debit',$amount,$desc,NOW(),NOW())`,
+      { bind: { accountId: accountId, amount: amount, desc: `Withdraw of ${amount}  euros on ${accountId} ` }, transaction: t }
+    );
+
+    await t.commit();
+    console.log(`Withdrawal completed on account ${accountId} , amount ${amount}`);
+
     return { message: 'Retrait réussi', accountId, amount: amount };
   } catch(err) {
     if (!t.finished) await t.rollback();
