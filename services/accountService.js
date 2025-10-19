@@ -90,4 +90,9 @@ async function withdraw(accountId, amount){
   }
 }
 
-module.exports = { transfer, withdraw };
+async function history(accountId){
+  console.log(`History service called for account id  ${accountId}`);
+  return { message: 'Endpoint history atteint' };
+}
+
+module.exports = { transfer, withdraw, history };

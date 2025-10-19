@@ -1,4 +1,4 @@
-const { transfer, withdraw } = require('../services/accountService');
+const { transfer, withdraw, history } = require('../services/accountService');
 
 async function postTransfer(req, res) {
   const fromAccountId = Number(req.params.fromAccountId);
@@ -49,4 +49,14 @@ async function postWithdrawal(req, res) {
   }
 }
 
-module.exports = { postTransfer, postWithdrawal };
+async function getHistory(req, res){
+  const { accountId } = req.params;
+  try {
+    const result = await history(accountId);
+    res.status(200).json(result);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+}
+
+module.exports = { postTransfer, postWithdrawal, getHistory };
