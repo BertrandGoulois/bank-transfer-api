@@ -2,9 +2,9 @@
 
 Cette API illustre la conception d’une application bancaire en Node.js exposant des endpoints REST. Le projet suit la méthodologie **Test Driven Development (TDD)** et utilise **Sequelize**, **Express**, **Jest** et **PostgreSQL**.
 
-Chaque commit a été pensé pour tracer ma démarche de développement, tant par son intitulé clair que par le contenu détaillé, permettant de suivre l’évolution des fonctionnalités, des tests et des corrections.
+Chaque commit a été pensé pour tracer la démarche de développement, tant par son intitulé clair que par le contenu détaillé, permettant de suivre l’évolution des fonctionnalités, des tests et des corrections.
 
-Elle sert à démontrer ma capacité à concevoir, tester et sécuriser des transactions financières de manière structurée et maintenable.
+Elle sert à démontrer la capacité à concevoir, tester et sécuriser des transactions financières de manière structurée et maintenable.
 
 ---
 
@@ -28,7 +28,19 @@ cd bank-transfer-api
 npm install
 ```
 
-2. Adapter `config/config.json` avec vos paramètres PostgreSQL (`user`, `password`, `host`, `port`, `database`) pour chaque environnement (`development`, `test`, `production`).
+2. Créer un fichier `.env` à la racine avec vos paramètres PostgreSQL :
+
+```
+DB_HOST=******
+DB_PORT=******
+DB_NAME=******
+DB_NAME_TEST=******
+DB_USER=******
+DB_PASSWORD=******
+NODE_ENV=******
+```
+
+> En environnement `test`, la base `bankdbtest` sera automatiquement utilisée.
 
 3. Peupler la base avec des données d’exemple :
 
@@ -43,13 +55,13 @@ npm run seed
 * **Mode développement** :
 
 ```bash
-npm start dev
+npm run dev
 ```
 
 * **Tests unitaires** :
 
 ```bash
-npm start test
+npm test
 ```
 
 ---
@@ -121,6 +133,15 @@ npm start test
 
 Ce projet est un support pour montrer :
 
-* Ma capacité à concevoir des endpoints REST sécurisés et testés
-* Ma maîtrise de Sequelize pour la gestion transactionnelle
-* Mon approche TDD pour produire un code fiable et maintenable
+* Capacité à concevoir des endpoints REST sécurisés et testés
+* Maîtrise de Sequelize pour la gestion transactionnelle
+* Approche TDD pour produire un code fiable et maintenable
+
+---
+
+## Changelog / Release v1.1.0
+
+* Migration de la configuration de `config.json` vers `.env` et `config.js`
+* Initialisation de Sequelize via `.env`
+* Tests unitaires utilisent désormais automatiquement `bankdbtest` en environnement `test`
+* Amélioration de la stabilité des tests unitaires par sélection automatique de la base selon l’environnement
