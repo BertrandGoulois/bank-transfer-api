@@ -5,18 +5,6 @@ async function postTransfer(req, res) {
   const toAccountId = Number(req.body.toAccountId);
   const amount = Number(req.body.amount);
 
-  if (!Number.isInteger(fromAccountId) || fromAccountId <= 0)
-    return res.status(400).json({ error: 'Identifiant de compte source invalide' });
-
-  if (!Number.isInteger(toAccountId) || toAccountId <= 0)
-    return res.status(400).json({ error: 'Identifiant de compte destination invalide' });
-
-  if (isNaN(amount) || amount <= 0)
-    return res.status(400).json({ error: 'Montant invalide' });
-
-  if (fromAccountId === toAccountId)
-    return res.status(400).json({ error: 'Les deux comptes ne peuvent être identiques' });
-
   try {
     const result = await transfer(fromAccountId, toAccountId, amount);
     res.status(200).json(result);

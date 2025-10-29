@@ -18,64 +18,61 @@ beforeAll(async () => {
 });
 
 describe('Transfer endpoint', () => {
-  test('should fail if source account id not a number', async () => {
-    const res = await request(app)
-      .post(`/accounts/notANumber/transfer`)
-      .send({ toAccountId: toAccountId, amount: 50 });
 
-    expect(res.status).toBe(400);
-    expect(res.body.error).toBe('Identifiant de compte source invalide');
-  });
-  test('should fail if destination account id not a number', async () => {
+  // Middleware validation tests
+  test('should fail if request body is missing required fields', async () => {
     const res = await request(app)
       .post(`/accounts/${fromAccountId}/transfer`)
-      .send({ toAccountId: 'notANumber', amount: 50 });
+      .send({});
 
     expect(res.status).toBe(400);
-    expect(res.body.error).toBe('Identifiant de compte destination invalide');
+    expect(res.body.error).toBe('Missing required fields');
   });
-  test('should fail if amount not a number', async () => {
+
+  test('should fail if amount is not a number', async () => {
     const res = await request(app)
       .post(`/accounts/${fromAccountId}/transfer`)
       .send({ toAccountId: toAccountId, amount: 'notANumber' });
 
     expect(res.status).toBe(400);
-    expect(res.body.error).toBe('Montant invalide');
+    expect(res.body.error).toBe('Amount must be a positive number');
   });
-  test('should fail if accounts are the same', async () => {
+
+  test('should fail if sender and receiver accounts are identical', async () => {
     const res = await request(app)
       .post(`/accounts/${fromAccountId}/transfer`)
       .send({ toAccountId: fromAccountId, amount: 50 });
 
     expect(res.status).toBe(400);
-    expect(res.body.error).toBe('Les deux comptes ne peuvent être identiques');
+    expect(res.body.error).toBe('Sender and receiver must be different');
   });
 
-  test('should fail if source account does not exist', async () => {
+  // Business logic tests (handled by the service)
+  test('should fail if sender account does not exist', async () => {
     const res = await request(app)
       .post('/accounts/9999/transfer')
       .send({ toAccountId: toAccountId, amount: 50 });
 
     expect(res.status).toBe(404);
-    expect(res.body.error).toBe('Compte source introuvable');
+    expect(res.body.error).toBe('Sender account not found');
   });
 
-  test('should fail if destination account does not exist', async () => {
+  test('should fail if receiver account does not exist', async () => {
     const res = await request(app)
       .post(`/accounts/${fromAccountId}/transfer`)
       .send({ toAccountId: 9999, amount: 50 });
 
     expect(res.status).toBe(404);
-    expect(res.body.error).toBe('Compte destination introuvable');
+    expect(res.body.error).toBe('Receiver account not found');
   });
 
   test('should fail if source has insufficient balance', async () => {
     const res = await request(app)
       .post(`/accounts/${fromAccountId}/transfer`)
-      .send({ toAccountId, amount: 9999 });
+      .send({ toAccountId: toAccountId, amount: 9999 });
 
     expect(res.status).toBe(400);
-    expect(res.body.error).toBe('Solde insuffisant');
+    expect(res.body.error).toBe('Insufficient balance');
   });
 
   test('should succeed and update balances', async () => {
@@ -86,10 +83,10 @@ describe('Transfer endpoint', () => {
 
     const res = await request(app)
       .post(`/accounts/${fromAccountId}/transfer`)
-      .send({ toAccountId, amount });
+      .send({ toAccountId: toAccountId, amount });
 
     expect(res.status).toBe(200);
-    expect(res.body.message).toBe('Transfert réussi');
+    expect(res.body.message).toBe('Transfer successful');
 
     const afterFrom = await Account.findByPk(fromAccountId);
     const afterTo = await Account.findByPk(toAccountId);
@@ -97,4 +94,5 @@ describe('Transfer endpoint', () => {
     expect(parseFloat(afterFrom.balance)).toBe(parseFloat(beforeFrom.balance) - amount);
     expect(parseFloat(afterTo.balance)).toBe(parseFloat(beforeTo.balance) + amount);
   });
+
 });
