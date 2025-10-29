@@ -95,11 +95,11 @@ async function history(accountId) {
   console.log(`History service called for account id ${accountId}`);
   const t = await sequelize.transaction();
   try {
-    const [fromAccount] = await sequelize.query(
+    const [account] = await sequelize.query(
       `SELECT * FROM "Accounts" WHERE id = $id FOR UPDATE`,
       { bind: { id: accountId }, type: sequelize.QueryTypes.SELECT, transaction: t }
     );
-    if (!fromAccount) throw { status: 404, error: 'Compte introuvable' };
+    if (!account) throw { status: 404, error: 'Account not found' };
 
     const transactions = await sequelize.query(
       `SELECT * FROM "Transactions" WHERE "accountId" = $id`,
@@ -123,16 +123,15 @@ async function history(accountId) {
     await t.commit();
 
     return {
-      message: 'Endpoint history atteint',
+      message: 'History endpoint reached',
       metrics: { averageAmount, byType, byDay },
       transactions
     };
   } catch (err) {
     if (!t.finished) await t.rollback();
-    console.error('History failed:', err);
+    console.error('History retrieval failed:', err);
     throw err;
   }
 }
-
 
 module.exports = { transfer, withdraw, history };

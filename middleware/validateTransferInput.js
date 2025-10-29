@@ -2,7 +2,7 @@ function validateTransferInput(req, res, next) {
     const senderAccount = req.params.fromAccountId;
     const { toAccountId, amount } = req.body;
 
-    if (!senderAccount || !toAccountId || amount === undefined) {
+    if (!toAccountId || amount === undefined) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
 

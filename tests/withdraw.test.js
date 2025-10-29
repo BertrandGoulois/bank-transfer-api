@@ -15,6 +15,11 @@ beforeAll(async () => {
 
 describe('Withdrawal endpoint', () => {
 
+    test('should fail if account id is missing', async () => {
+        const res = await request(app).get(`/accounts//withdraw`);
+        expect(res.status).toBe(404);
+    });
+
     // Middleware validation tests
     test('should fail if account id is not a number', async () => {
         const res = await request(app)

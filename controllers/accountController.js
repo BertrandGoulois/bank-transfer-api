@@ -33,10 +33,6 @@ async function postWithdrawal(req, res) {
 
 async function getHistory(req, res) {
   const accountId = Number(req.params.accountId);
-
-  if (!Number.isInteger(accountId) || accountId <= 0)
-    return res.status(400).json({ error: 'Identifiant de compte invalide' });
-
   try {
     const result = await history(accountId);
     res.status(200).json(result);

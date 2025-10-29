@@ -19,6 +19,11 @@ beforeAll(async () => {
 
 describe('Transfer endpoint', () => {
 
+  test('should fail if account id is missing', async () => {
+    const res = await request(app).get(`/accounts//transfer`);
+    expect(res.status).toBe(404);
+  });
+
   // Middleware validation tests
   test('should fail if request body is missing required fields', async () => {
     const res = await request(app)
