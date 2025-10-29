@@ -1,10 +1,15 @@
 const { sequelize } = require('../models');
 
+/**
+ * Transfers an amount from one account to another.
+ * @param {number} fromAccountId - ID of the sender account.
+ * @param {number} toAccountId - ID of the receiver account.
+ * @param {number} amount - Amount to transfer.
+ * @throws {Object} Throws an error with `status` and `error` if transfer fails.
+ * @returns {Promise<Object>} Object containing transfer result.
+ */
 async function transfer(fromAccountId, toAccountId, amount) {
   console.log(`Transfer service called: from ${fromAccountId} to ${toAccountId}, amount ${amount}`);
-
-  if (fromAccountId === toAccountId)
-    throw { status: 400, error: 'Sender and receiver must be different' };
 
   const t = await sequelize.transaction();
 

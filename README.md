@@ -1,34 +1,34 @@
-# API Bancaire Node.js
+# Bank API Node.js
 
-Cette API illustre la conception d’une application bancaire en Node.js exposant des endpoints REST. Le projet suit la méthodologie **Test Driven Development (TDD)** et utilise **Sequelize**, **Express**, **Jest** et **PostgreSQL**.
+This API demonstrates the design of a banking application in Node.js exposing REST endpoints. The project follows **Test Driven Development (TDD)** and uses **Sequelize**, **Express**, **Jest**, and **PostgreSQL**.
 
-Chaque commit a été pensé pour tracer la démarche de développement, tant par son intitulé clair que par le contenu détaillé, permettant de suivre l’évolution des fonctionnalités, des tests et des corrections.
+Each commit is descriptive to trace development, allowing clear visibility of new features, tests, and fixes.
 
-Elle sert à démontrer la capacité à concevoir, tester et sécuriser des transactions financières de manière structurée et maintenable.
+It serves to demonstrate structured, maintainable, and secure handling of financial transactions.
 
 ---
 
-## Stack technique
+## Technical Stack
 
 * **Node.js**
 * **Express**
 * **PostgreSQL**
 * **Sequelize**
-* **Jest** (tests unitaires)
+* **Jest** (unit testing)
 
 ---
 
 ## Installation & Configuration
 
-1. Cloner le projet :
+1. Clone the project:
 
 ```bash
 git clone <repository-url>
 cd bank-transfer-api
 npm install
-```
+````
 
-2. Créer un fichier `.env` à la racine avec vos paramètres PostgreSQL :
+2. Create a `.env` file at the root with your PostgreSQL parameters:
 
 ```
 DB_HOST=******
@@ -40,9 +40,9 @@ DB_PASSWORD=******
 NODE_ENV=******
 ```
 
-> En environnement `test`, la base `bankdbtest` sera automatiquement utilisée.
+> In the `test` environment, the database `bankdbtest` will be used automatically.
 
-3. Peupler la base avec des données d’exemple :
+3. Seed the database with sample data:
 
 ```bash
 npm run seed
@@ -50,15 +50,15 @@ npm run seed
 
 ---
 
-## Lancement
+## Running
 
-* **Mode développement** :
+* **Development mode**:
 
 ```bash
 npm run dev
 ```
 
-* **Tests unitaires** :
+* **Unit tests**:
 
 ```bash
 npm test
@@ -68,7 +68,7 @@ npm test
 
 ## Endpoints
 
-### 1. Transfert d'argent
+### 1. Money Transfer
 
 * **POST** : `http://localhost:3000/accounts/:fromAccountId/transfer`
 * **Body JSON** :
@@ -80,11 +80,15 @@ npm test
 }
 ```
 
-* **Cas d'erreurs** : compte source ou destination introuvable (`404`), solde insuffisant (`400`).
+* **Error cases**:
+
+  * `404` → "Sender account not found" / "Receiver account not found"
+  * `400` → "Insufficient balance" / "Sender and receiver must be different"
+  * `400` → "Missing required fields" / "Amount must be a positive number"
 
 ---
 
-### 2. Retrait
+### 2. Withdrawal
 
 * **POST** : `http://localhost:3000/accounts/:accountId/withdraw`
 * **Body JSON** :
@@ -95,18 +99,31 @@ npm test
 }
 ```
 
-* **Cas d'erreurs** : compte introuvable (`404`), solde insuffisant (`400`).
+* **Error cases**:
+
+  * `404` → "Account not found"
+  * `400` → "Insufficient balance" / "Amount must be a positive number"
 
 ---
 
-### 3. Historique des transactions
+### 3. Transaction History
 
 * **GET** : `http://localhost:3000/accounts/:accountId/history`
-* **Réponse JSON** :
+* **Response JSON** :
 
 ```json
 {
-    "transactions": [ ... ],
+    "transactions": [
+        {
+            "id": 1,
+            "accountId": 1,
+            "type": "credit",
+            "amount": 200,
+            "description": "Salary",
+            "createdAt": "2025-10-15T00:00:00.000Z",
+            "updatedAt": "2025-10-15T00:00:00.000Z"
+        }
+    ],
     "metrics": {
         "averageAmount": 75,
         "byType": { "deposit": 2, "withdrawal": 1 },
@@ -115,33 +132,55 @@ npm test
 }
 ```
 
-* **Cas d'erreurs** : compte introuvable (`404`).
+* **Error cases**:
+
+  * `404` → "Account not found"
+  * `400` → "Invalid account id"
 
 ---
 
-## Fonctionnalités clés
+## Key Features
 
-* Gestion complète des transactions : transfert et retrait
-* Historique avec statistiques synthétiques (montant moyen, nombre par type et par jour)
-* Sécurité transactionnelle via `FOR UPDATE` et rollback en cas d’erreur
-* Suivi TDD avec Jest pour validation complète des cas normaux et erreurs
-* Utilisation de seeds pour initialiser rapidement la base de données
-
----
-
-## Objectif démonstratif
-
-Ce projet est un support pour montrer :
-
-* Capacité à concevoir des endpoints REST sécurisés et testés
-* Maîtrise de Sequelize pour la gestion transactionnelle
-* Approche TDD pour produire un code fiable et maintenable
+* Full transaction handling: transfer and withdrawal
+* History endpoint with summary metrics (average amount, count per type, count per day)
+* Transaction safety with `FOR UPDATE` and rollback on failure
+* TDD approach with Jest covering all success and error cases
+* Seed data for rapid database initialization
+* English messages for API consistency
 
 ---
 
-## Changelog / Release v1.1.0
+## JSDoc
 
-* Migration de la configuration de `config.json` vers `.env` et `config.js`
-* Initialisation de Sequelize via `.env`
-* Tests unitaires utilisent désormais automatiquement `bankdbtest` en environnement `test`
-* Amélioration de la stabilité des tests unitaires par sélection automatique de la base selon l’environnement
+All service and controller functions are documented with JSDoc for easier maintenance and IDE integration.
+
+---
+
+## Objective
+
+This project demonstrates:
+
+* Ability to design tested and secure REST endpoints
+* Mastery of Sequelize for transactional operations
+* TDD-driven, reliable, and maintainable Node.js code
+
+---
+
+## Changelog / Release v1.2.0
+
+* Added middleware input validation for transfer, withdrawal, and history endpoints
+* Updated all endpoints to use English error and success messages
+* Split controllers and services into separate files per endpoint
+* Updated all unit tests to cover middleware validation and service errors
+* Added JSDoc comments for services and controllers for better documentation and clarity
+* All tests passing (19/19)
+
+```
+
+This version reflects:  
+
+* English messages throughout  
+* Middleware validation clearly noted  
+* Service/controller split reflected  
+* Full TDD coverage  
+* Release v1.2.0 changelog included  

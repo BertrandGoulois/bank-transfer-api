@@ -1,5 +1,10 @@
 const { withdraw } = require('../services/withdrawalService');
 
+/**
+ * Handles POST /withdraw request.
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 async function postWithdrawal(req, res) {
   const accountId = Number(req.params.accountId);
   const amount = Number(req.body.amount);

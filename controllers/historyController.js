@@ -1,5 +1,10 @@
 const { history } = require('../services/historyService');
 
+/**
+ * Handles GET /history request.
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 async function getHistory(req, res) {
   const accountId = Number(req.params.accountId);
   try {

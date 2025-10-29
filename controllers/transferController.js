@@ -1,5 +1,10 @@
 const { transfer } = require('../services/transferService');
 
+/**
+ * Handles POST /transfer request.
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 async function postTransfer(req, res) {
   const fromAccountId = Number(req.params.fromAccountId);
   const toAccountId = Number(req.body.toAccountId);

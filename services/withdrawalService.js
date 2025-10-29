@@ -1,5 +1,12 @@
 const { sequelize } = require('../models');
 
+/**
+ * Withdraws an amount from an account.
+ * @param {number} accountId - ID of the account to withdraw from.
+ * @param {number} amount - Amount to withdraw.
+ * @throws {Object} Throws an error with `status` and `error` if withdrawal fails.
+ * @returns {Promise<Object>} Object containing withdrawal result.
+ */
 async function withdraw(accountId, amount) {
   console.log(`Withdraw service called: from ${accountId}, amount ${amount}`);
   const t = await sequelize.transaction();

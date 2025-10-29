@@ -1,5 +1,11 @@
 const { sequelize } = require('../models');
 
+/**
+ * Retrieves account transaction history with metrics.
+ * @param {number} accountId - ID of the account.
+ * @throws {Object} Throws an error with `status` and `error` if account not found.
+ * @returns {Promise<Object>} Object containing transactions and metrics.
+ */
 async function history(accountId) {
   console.log(`History service called for account id ${accountId}`);
   const t = await sequelize.transaction();
