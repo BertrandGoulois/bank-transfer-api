@@ -64,10 +64,10 @@ async function withdraw(accountId, amount) {
       `SELECT * FROM "Accounts" WHERE id = $id FOR UPDATE`,
       { bind: { id: accountId }, type: sequelize.QueryTypes.SELECT, transaction: t }
     );
-    if (!fromAccount) throw { status: 404, error: 'Compte introuvable' };
+    if (!fromAccount) throw { status: 404, error: 'Account not found' };
 
     if (parseFloat(fromAccount.balance) < amount)
-      throw { status: 400, error: 'Solde insuffisant' };
+      throw { status: 400, error: 'Insufficient balance' };
 
     await sequelize.query(
       `UPDATE "Accounts" SET balance = balance - $amount, "updatedAt" = NOW() WHERE id = $id`,
@@ -77,13 +77,13 @@ async function withdraw(accountId, amount) {
     await sequelize.query(
       `INSERT INTO "Transactions" ("accountId","type","amount","description","createdAt","updatedAt")
        VALUES ($accountId,'debit',$amount,$desc,NOW(),NOW())`,
-      { bind: { accountId: accountId, amount: amount, desc: `Withdraw of ${amount}  euros on ${accountId} ` }, transaction: t }
+      { bind: { accountId: accountId, amount: amount, desc: `Withdrawal of ${amount} on account ${accountId}` }, transaction: t }
     );
 
     await t.commit();
-    console.log(`Withdrawal completed on account ${accountId} , amount ${amount}`);
+    console.log(`Withdrawal completed on account ${accountId}, amount ${amount}`);
 
-    return { message: 'Retrait réussi', accountId, amount: amount };
+    return { message: 'Withdrawal successful', accountId, amount: amount };
   } catch (err) {
     if (!t.finished) await t.rollback();
     console.error('Withdraw failed:', err);

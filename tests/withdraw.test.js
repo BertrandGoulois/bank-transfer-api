@@ -14,55 +14,67 @@ beforeAll(async () => {
 });
 
 describe('Withdrawal endpoint', () => {
-    test('should fail if account id not a number', async () => {
+
+    // Middleware validation tests
+    test('should fail if account id is not a number', async () => {
         const res = await request(app)
             .post(`/accounts/notANumber/withdraw`)
             .send({ amount: 10 });
 
         expect(res.status).toBe(400);
-        expect(res.body.error).toBe('Identifiant de compte invalide');
+        expect(res.body.error).toBe('Invalid account id');
     });
 
-    test('should fail if amount not a number', async () => {
+    test('should fail if amount is missing', async () => {
+        const res = await request(app)
+            .post(`/accounts/${accountId}/withdraw`)
+            .send({});
+
+        expect(res.status).toBe(400);
+        expect(res.body.error).toBe('Missing amount');
+    });
+
+    test('should fail if amount is not a number', async () => {
         const res = await request(app)
             .post(`/accounts/${accountId}/withdraw`)
             .send({ amount: 'notANumber' });
 
         expect(res.status).toBe(400);
-        expect(res.body.error).toBe('Montant invalide');
+        expect(res.body.error).toBe('Amount must be a positive number');
     });
 
-    test(`should fail if account does not exist`, async () => {
+    test('should fail if account does not exist', async () => {
         const res = await request(app)
             .post(`/accounts/9999/withdraw`)
             .send({ amount: 10 });
 
         expect(res.status).toBe(404);
-        expect(res.body.error).toBe('Compte introuvable');
+        expect(res.body.error).toBe('Account not found');
     });
 
-    test('should fail if source has insufficient balance', async () => {
+    test('should fail if account has insufficient balance', async () => {
         const res = await request(app)
             .post(`/accounts/${accountId}/withdraw`)
             .send({ amount: 9999 });
 
         expect(res.status).toBe(400);
-        expect(res.body.error).toBe('Solde insuffisant');
+        expect(res.body.error).toBe('Insufficient balance');
     });
-    test('should succeed and update balance from account', async () => {
-        const amount = 50;
 
-        const from = await Account.findByPk(accountId);
+    // Successful withdrawal
+    test('should succeed and update account balance', async () => {
+        const amount = 50;
+        const before = await Account.findByPk(accountId);
 
         const res = await request(app)
             .post(`/accounts/${accountId}/withdraw`)
             .send({ amount });
 
         expect(res.status).toBe(200);
-        expect(res.body.message).toBe('Retrait réussi');
+        expect(res.body.message).toBe('Withdrawal successful');
 
-        const afterFrom = await Account.findByPk(accountId);
-
-        expect(parseFloat(afterFrom.balance)).toBe(parseFloat(from.balance) - amount);
+        const after = await Account.findByPk(accountId);
+        expect(parseFloat(after.balance)).toBe(parseFloat(before.balance) - amount);
     });
+
 });

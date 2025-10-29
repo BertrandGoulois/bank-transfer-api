@@ -20,12 +20,6 @@ async function postWithdrawal(req, res) {
   const accountId = Number(req.params.accountId);
   const amount = Number(req.body.amount);
 
-  if (!Number.isInteger(accountId) || accountId <= 0)
-    return res.status(400).json({ error: 'Identifiant de compte invalide' });
-
-  if (isNaN(amount) || amount <= 0)
-    return res.status(400).json({ error: 'Montant invalide' });
-
   try {
     const result = await withdraw(accountId, amount);
     res.status(200).json(result);
