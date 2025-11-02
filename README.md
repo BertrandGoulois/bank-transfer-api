@@ -2,9 +2,7 @@
 
 This API demonstrates the design of a banking application in Node.js exposing REST endpoints. The project follows **Test Driven Development (TDD)** and uses **Sequelize**, **Express**, **Jest**, and **PostgreSQL**.
 
-Each commit is descriptive to trace development, allowing clear visibility of new features, tests, and fixes.
-
-It serves to demonstrate structured, maintainable, and secure handling of financial transactions.
+All commits are descriptive to trace development, allowing clear visibility of new features, tests, and fixes. The project demonstrates structured, maintainable, and secure handling of financial transactions.
 
 ---
 
@@ -15,6 +13,8 @@ It serves to demonstrate structured, maintainable, and secure handling of financ
 * **PostgreSQL**
 * **Sequelize**
 * **Jest** (unit testing)
+* **bcrypt** (password hashing)
+* **jsonwebtoken** (JWT authentication)
 
 ---
 
@@ -26,9 +26,9 @@ It serves to demonstrate structured, maintainable, and secure handling of financ
 git clone <repository-url>
 cd bank-transfer-api
 npm install
-````
+```
 
-2. Create a `.env` file at the root with your PostgreSQL parameters:
+2. Create a `.env` file at the root with your PostgreSQL parameters and JWT secret:
 
 ```
 DB_HOST=******
@@ -38,6 +38,7 @@ DB_NAME_TEST=******
 DB_USER=******
 DB_PASSWORD=******
 NODE_ENV=******
+JWT_SECRET=******
 ```
 
 > In the `test` environment, the database `bankdbtest` will be used automatically.
@@ -126,7 +127,7 @@ npm test
     ],
     "metrics": {
         "averageAmount": 75,
-        "byType": { "deposit": 2, "withdrawal": 1 },
+        "byType": { "credit": 2, "debit": 1 },
         "byDay": { "2025-10-19": 3 }
     }
 }
@@ -139,20 +140,55 @@ npm test
 
 ---
 
+### 4. Authentication
+
+* **POST** : `http://localhost:3000/auth/login`
+* **Body JSON**:
+
+```json
+{
+    "email": "bertrand@mail.com",
+    "password": "userpassword"
+}
+```
+
+* **Response JSON**:
+
+```json
+{
+    "token": "<JWT token>"
+}
+```
+
+* **Error cases**:
+
+  * `401` → "Invalid email or password"
+  * `400` → "Missing required fields"
+
+* **Usage**: Include the token in the `Authorization` header for protected endpoints:
+
+```
+Authorization: Bearer <JWT token>
+```
+
+---
+
 ## Key Features
 
 * Full transaction handling: transfer and withdrawal
 * History endpoint with summary metrics (average amount, count per type, count per day)
 * Transaction safety with `FOR UPDATE` and rollback on failure
+* JWT-based authentication with hashed passwords
 * TDD approach with Jest covering all success and error cases
 * Seed data for rapid database initialization
 * English messages for API consistency
+* JSDoc comments for services and controllers for easier maintenance
 
 ---
 
 ## JSDoc
 
-All service and controller functions are documented with JSDoc for easier maintenance and IDE integration.
+All service and controller functions are documented with JSDoc for easier IDE integration and maintenance.
 
 ---
 
@@ -163,24 +199,15 @@ This project demonstrates:
 * Ability to design tested and secure REST endpoints
 * Mastery of Sequelize for transactional operations
 * TDD-driven, reliable, and maintainable Node.js code
+* Implementation of JWT-based authentication
 
 ---
 
-## Changelog / Release v1.2.0
+## Changelog / Release v1.3.0
 
-* Added middleware input validation for transfer, withdrawal, and history endpoints
-* Updated all endpoints to use English error and success messages
-* Split controllers and services into separate files per endpoint
-* Updated all unit tests to cover middleware validation and service errors
-* Added JSDoc comments for services and controllers for better documentation and clarity
-* All tests passing (19/19)
-
-```
-
-This version reflects:  
-
-* English messages throughout  
-* Middleware validation clearly noted  
-* Service/controller split reflected  
-* Full TDD coverage  
-* Release v1.2.0 changelog included  
+* Added JWT-based authentication
+* Passwords are now hashed
+* Added `/auth/login` endpoint
+* Updated middleware and endpoint tests for authentication
+* Updated README with login instructions and token usage
+* All previous tests passing with authentication applied

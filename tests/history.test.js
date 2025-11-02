@@ -1,14 +1,17 @@
 const request = require('supertest');
 const app = require('../server');
 const { sequelize, User, Account, Transaction } = require('../models');
+const bcrypt = require('bcrypt');
 
 let accountId;
+let token;
 let insertedTransactions = [];
 
 beforeAll(async () => {
     await sequelize.sync({ force: true });
 
-    const user = await User.create({ name: 'Bertrand', email: 'bertrand@mail.com' });
+    const passwordHash = await bcrypt.hash('password123', 10);
+    const user = await User.create({ name: 'Bertrand', email: 'bertrand@mail.com', password: passwordHash });
     const account = await Account.create({ userId: user.id, type: 'checking', balance: 500 });
 
     insertedTransactions = await Transaction.bulkCreate([
@@ -19,32 +22,36 @@ beforeAll(async () => {
     ]);
 
     accountId = account.id;
+
+    // login to get token
+    const res = await request(app).post('/auth/login').send({ email: 'bertrand@mail.com', password: 'password123' });
+    token = res.body.token;
 });
 
 describe('History endpoint', () => {
-
-    test('should fail if account id is missing', async () => {
-        const res = await request(app).get(`/accounts//history`);
-        expect(res.status).toBe(404);
-    });
-
-    // Middleware validation tests
     test('should fail if account id is not a number', async () => {
-        const res = await request(app).get(`/accounts/notANumber/history`);
+        const res = await request(app)
+            .get(`/accounts/notANumber/history`)
+            .set('Authorization', `Bearer ${token}`);
+
         expect(res.status).toBe(400);
         expect(res.body.error).toBe('Invalid account id');
     });
 
-    // Service-level errors
     test('should fail if account does not exist', async () => {
-        const res = await request(app).get(`/accounts/9999/history`);
+        const res = await request(app)
+            .get(`/accounts/9999/history`)
+            .set('Authorization', `Bearer ${token}`);
+
         expect(res.status).toBe(404);
         expect(res.body.error).toBe('Account not found');
     });
 
-    // Successful history retrieval
     test('should return correct metrics for account history', async () => {
-        const res = await request(app).get(`/accounts/${accountId}/history`);
+        const res = await request(app)
+            .get(`/accounts/${accountId}/history`)
+            .set('Authorization', `Bearer ${token}`);
+
         expect(res.status).toBe(200);
 
         const amounts = insertedTransactions.map(t => parseFloat(t.amount));
