@@ -1,28 +1,22 @@
-const { sequelize } = require('../models');
+import { sequelize } from '../models/index';
+import { TransferResult } from '../interfaces/transactions';
+import { QueryTypes, Transaction } from 'sequelize';
 
-/**
- * Transfers an amount from one account to another.
- * @param {number} fromAccountId - ID of the sender account.
- * @param {number} toAccountId - ID of the receiver account.
- * @param {number} amount - Amount to transfer.
- * @throws {Object} Throws an error with `status` and `error` if transfer fails.
- * @returns {Promise<Object>} Object containing transfer result.
- */
-async function transfer(fromAccountId, toAccountId, amount) {
+const transfer = async (fromAccountId: number, toAccountId: number, amount: number): Promise<TransferResult> => {
   console.log(`Transfer service called: from ${fromAccountId} to ${toAccountId}, amount ${amount}`);
 
-  const t = await sequelize.transaction();
+  const t: Transaction = await sequelize.transaction();
 
   try {
-    const [fromAccount] = await sequelize.query(
+    const [fromAccount]: any = await sequelize.query(
       `SELECT * FROM "Accounts" WHERE id = $id FOR UPDATE`,
-      { bind: { id: fromAccountId }, type: sequelize.QueryTypes.SELECT, transaction: t }
+      { bind: { id: fromAccountId }, type: QueryTypes.SELECT, transaction: t }
     );
     if (!fromAccount) throw { status: 404, error: 'Sender account not found' };
 
-    const [toAccount] = await sequelize.query(
+    const [toAccount]: any = await sequelize.query(
       `SELECT * FROM "Accounts" WHERE id = $id FOR UPDATE`,
-      { bind: { id: toAccountId }, type: sequelize.QueryTypes.SELECT, transaction: t }
+      { bind: { id: toAccountId }, type: QueryTypes.SELECT, transaction: t }
     );
     if (!toAccount) throw { status: 404, error: 'Receiver account not found' };
 
@@ -51,12 +45,17 @@ async function transfer(fromAccountId, toAccountId, amount) {
 
     await t.commit();
     console.log(`Transfer completed: from ${fromAccountId} to ${toAccountId}, amount ${amount}`);
-    return { message: 'Transfer successful', fromAccountId, toAccountId, amount: amount };
+    return {
+      message: 'Transfer successful',
+      fromAccountId,
+      toAccountId,
+      amount: amount
+    };
   } catch (err) {
-    if (!t.finished) await t.rollback();
+    await t.rollback();
     console.error('Transfer failed:', err);
     throw err;
   }
 }
 
-module.exports = { transfer };
+export default transfer;

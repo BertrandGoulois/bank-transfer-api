@@ -1,11 +1,7 @@
-const { transfer } = require('../services/transferService');
+import { Request, Response } from 'express';
+import transfer from '../services/transferService';
 
-/**
- * Handles POST /transfer request.
- * @param {import('express').Request} req
- * @param {import('express').Response} res
- */
-async function postTransfer(req, res) {
+const postTransfer = async (req: Request, res: Response) => {
   const fromAccountId = Number(req.params.fromAccountId);
   const toAccountId = Number(req.body.toAccountId);
   const amount = Number(req.body.amount);
@@ -13,12 +9,11 @@ async function postTransfer(req, res) {
   try {
     const result = await transfer(fromAccountId, toAccountId, amount);
     res.status(200).json(result);
-  } catch (err) {
-    console.error('Caught error in controller:', err);
+  } catch (err: any) {
     const status = typeof err.status === 'number' ? err.status : 500;
     const error = err.error || err.message || 'Internal server error';
     res.status(status).json({ error });
   }
 }
 
-module.exports = { postTransfer };
+export default postTransfer;

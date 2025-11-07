@@ -15,6 +15,7 @@ All commits are descriptive to trace development, allowing clear visibility of n
 * **Jest** (unit testing)
 * **bcrypt** (password hashing)
 * **jsonwebtoken** (JWT authentication)
+* **TypeScript** (project migration)
 
 ---
 
@@ -182,13 +183,7 @@ Authorization: Bearer <JWT token>
 * TDD approach with Jest covering all success and error cases
 * Seed data for rapid database initialization
 * English messages for API consistency
-* JSDoc comments for services and controllers for easier maintenance
-
----
-
-## JSDoc
-
-All service and controller functions are documented with JSDoc for easier IDE integration and maintenance.
+* Migrated fully to TypeScript, removing JSDoc comments
 
 ---
 
@@ -200,14 +195,13 @@ This project demonstrates:
 * Mastery of Sequelize for transactional operations
 * TDD-driven, reliable, and maintainable Node.js code
 * Implementation of JWT-based authentication
+* Migration from JavaScript to TypeScript for type safety and maintainability
 
 ---
 
-## Changelog / Release v1.3.0
+## Changelog / Release v1.4.0
 
-* Added JWT-based authentication
-* Passwords are now hashed
-* Added `/auth/login` endpoint
-* Updated middleware and endpoint tests for authentication
-* Updated README with login instructions and token usage
-* All previous tests passing with authentication applied
+* Migrated codebase and tests from JavaScript to TypeScript
+* Removed all JSDoc comments
+* All previous functionality preserved and tests passing
+* Project ready for TypeScript development and maintainability

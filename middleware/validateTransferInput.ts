@@ -1,4 +1,6 @@
-function validateTransferInput(req, res, next) {
+import { Request, Response, NextFunction } from 'express';
+
+const validateTransferInput = (req: Request, res: Response, next: NextFunction) => {
     const senderAccount = req.params.fromAccountId;
     const { toAccountId, amount } = req.body;
 
@@ -26,4 +28,4 @@ function validateTransferInput(req, res, next) {
 }
 
 
-module.exports = validateTransferInput;
+export default validateTransferInput;

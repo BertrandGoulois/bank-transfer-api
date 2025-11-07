@@ -1,15 +1,16 @@
-const { loginService } = require('../services/authService');
+import { Request, Response } from 'express';
+import loginService from '../services/authService';
 
-async function login(req, res) {
+const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
   try {
     const token = await loginService(email, password);
     res.status(200).json({ token });
-  } catch (err) {
+  } catch (err: any) {
     const status = err.status || 401;
     res.status(status).json({ error: err.message });
   }
 }
 
-module.exports = { login };
+export default login;

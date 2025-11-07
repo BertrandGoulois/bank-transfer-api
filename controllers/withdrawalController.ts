@@ -1,23 +1,18 @@
-const { withdraw } = require('../services/withdrawalService');
+import { Request, Response } from 'express';
+import withdraw from '../services/withdrawalService';
 
-/**
- * Handles POST /withdraw request.
- * @param {import('express').Request} req
- * @param {import('express').Response} res
- */
-async function postWithdrawal(req, res) {
+const postWithdrawal = async (req: Request, res: Response) => {
   const accountId = Number(req.params.accountId);
   const amount = Number(req.body.amount);
 
   try {
     const result = await withdraw(accountId, amount);
     res.status(200).json(result);
-  } catch (err) {
-    console.log('Caught error in controller:', err);
+  } catch (err: any) {
     const status = typeof err.status === 'number' ? err.status : 500;
     const error = err.error || err.message || 'Internal server error';
     res.status(status).json({ error });
   }
 }
 
-module.exports = { postWithdrawal };
+export default postWithdrawal;

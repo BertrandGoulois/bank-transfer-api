@@ -1,4 +1,6 @@
-function validateWithdrawalInput(req, res, next) {
+import { Request, Response, NextFunction } from 'express';
+
+const validateWithdrawalInput = (req: Request, res: Response, next: NextFunction) => {
     const accountId = req.params.accountId;
     const { amount } = req.body;
 
@@ -17,4 +19,4 @@ function validateWithdrawalInput(req, res, next) {
     next();
 }
 
-module.exports = validateWithdrawalInput;
+export default validateWithdrawalInput;
