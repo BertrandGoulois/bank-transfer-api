@@ -28,7 +28,7 @@ describe('Authentication', () => {
       .send({ email: 'wrong@mail.com', password: 'password123' });
 
     expect(res.status).toBe(401);
-    expect(res.body.error).toBe('Invalid credentials');
+    expect(res.body.error).toBe('Authentication failed');
   });
 
   test('should fail login with wrong password', async () => {
@@ -37,6 +37,6 @@ describe('Authentication', () => {
       .send({ email: 'bertrand@mail.com', password: 'wrongpass' });
 
     expect(res.status).toBe(401);
-    expect(res.body.error).toBe('Invalid credentials');
+    expect(res.body.error).toBe('Authentication failed');
   });
 });

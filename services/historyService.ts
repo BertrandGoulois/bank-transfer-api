@@ -1,20 +1,19 @@
-import { sequelize } from '../models/index';
-import { HistoryResult } from '../interfaces/transactions';
+import { sequelize } from '../models';
+import { HistoryResult, AccountRow, TransactionRow } from '../interfaces/transactions';
 import { QueryTypes, Transaction } from 'sequelize';
 
 const history = async (accountId: number): Promise<HistoryResult> => {
-  console.log(`History service called for account id ${accountId}`);
   const t: Transaction = await sequelize.transaction();
 
   try {
-    const [account]: any = await sequelize.query(
+    const account = await sequelize.query<AccountRow>(
       `SELECT * FROM "Accounts" WHERE id = $id FOR UPDATE`,
       { bind: { id: accountId }, type: QueryTypes.SELECT, transaction: t }
     );
 
-    if (!account) throw { status: 404, error: 'Account not found' };
+    if (account.length === 0) throw { status: 404, error: 'Account not found' };
 
-    const transactions: any[] = await sequelize.query(
+    const transactions = await sequelize.query<TransactionRow>(
       `SELECT * FROM "Transactions" WHERE "accountId" = $id`,
       { bind: { id: accountId }, type: QueryTypes.SELECT, transaction: t }
     );
@@ -43,7 +42,6 @@ const history = async (accountId: number): Promise<HistoryResult> => {
     };
   } catch (err) {
     await t.rollback();
-    console.error('History retrieval failed:', err);
     throw err;
   }
 };

@@ -1,13 +1,15 @@
-import { sequelize } from '../models/index';
-import { WithdrawResult } from '../interfaces/transactions';
+import { sequelize } from '../models';
+import { WithdrawResult, AccountRow } from '../interfaces/transactions';
 import { QueryTypes, Transaction } from 'sequelize';
 
-const withdraw = async (accountId: number, amount: number): Promise<WithdrawResult> => {
-  console.log(`Withdraw service called: from ${accountId}, amount ${amount}`);
+const withdraw = async (
+  accountId: number,
+  amount: number
+): Promise<WithdrawResult> => {
   const t: Transaction = await sequelize.transaction();
 
   try {
-    const [fromAccount]: any = await sequelize.query(
+    const accounts = await sequelize.query<AccountRow>(
       `SELECT * FROM "Accounts" WHERE id = $id FOR UPDATE`,
       {
         bind: { id: accountId },
@@ -15,9 +17,9 @@ const withdraw = async (accountId: number, amount: number): Promise<WithdrawResu
         transaction: t,
       }
     );
-
-    if (!fromAccount) throw { status: 404, error: 'Account not found' };
-    if (parseFloat(fromAccount.balance) < amount)
+    const account = accounts[0];
+    if (!account) throw { status: 404, error: 'Account not found' };
+    if (parseFloat(account.balance) < amount)
       throw { status: 400, error: 'Insufficient balance' };
 
     await sequelize.query(
@@ -39,12 +41,9 @@ const withdraw = async (accountId: number, amount: number): Promise<WithdrawResu
     );
 
     await t.commit();
-    console.log(`Withdrawal completed on account ${accountId}, amount ${amount}`);
-
     return { message: 'Withdrawal successful', accountId, amount };
   } catch (err) {
     await t.rollback();
-    console.error('Withdraw failed:', err);
     throw err;
   }
 };

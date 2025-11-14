@@ -1,6 +1,6 @@
 {
   "name": "bank-transfer-api",
-  "version": "1.0.0",
+  "version": "1.4.1",
   "description": "Demonstration of my logic to develop a bank transfer API",
   "main": "dist/server.js",
   "scripts": {

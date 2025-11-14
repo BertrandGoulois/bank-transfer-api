@@ -10,7 +10,7 @@ const postWithdrawal = async (req: Request, res: Response) => {
     res.status(200).json(result);
   } catch (err: any) {
     const status = typeof err.status === 'number' ? err.status : 500;
-    const error = err.error || err.message || 'Internal server error';
+    const error = err.error || 'Internal server error';
     res.status(status).json({ error });
   }
 }

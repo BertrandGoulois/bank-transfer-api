@@ -1,4 +1,4 @@
-import { UserModel } from '../models/index';
+import { UserModel } from '../models';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 

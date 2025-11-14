@@ -184,6 +184,7 @@ Authorization: Bearer <JWT token>
 * Seed data for rapid database initialization
 * English messages for API consistency
 * Migrated fully to TypeScript, removing JSDoc comments
+* Services and controllers refactored for type-safe Sequelize queries and consistent error handling
 
 ---
 
@@ -199,9 +200,19 @@ This project demonstrates:
 
 ---
 
-## Changelog / Release v1.4.0
+## Changelog / Release
+
+**v1.4.0**
 
 * Migrated codebase and tests from JavaScript to TypeScript
 * Removed all JSDoc comments
 * All previous functionality preserved and tests passing
 * Project ready for TypeScript development and maintainability
+
+**v1.4.1**
+
+* Refactored services and controllers for cleaner TypeScript usage
+* Updated Sequelize queries with proper generics and type safety
+* Removed redundant array destructuring when fetching single rows
+* Improved error handling consistency across controllers
+* No breaking API changes; tests fully passing

@@ -14,6 +14,6 @@ const postTransfer = async (req: Request, res: Response) => {
     const error = err.error || err.message || 'Internal server error';
     res.status(status).json({ error });
   }
-}
+};
 
 export default postTransfer;

@@ -22,3 +22,22 @@ export interface WithdrawResult {
   accountId: number;
   amount: number;
 }
+
+export interface AccountRow {
+  id: number;
+  userId: number;
+  balance: string;
+  type: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface TransactionRow {
+  id: number;
+  accountId: number;
+  type: string;
+  amount: string;
+  description?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
