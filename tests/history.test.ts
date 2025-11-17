@@ -1,5 +1,5 @@
 import request from 'supertest';
-import app from '../server';
+import app from '../app';
 import { sequelize, User, Account, Transaction } from '../models';
 import bcrypt from 'bcrypt';
 
@@ -25,6 +25,10 @@ beforeAll(async () => {
 
   const res = await request(app).post('/auth/login').send({ email: 'bertrand@mail.com', password: 'password123' });
   token = res.body.token;
+});
+
+afterAll(async () => {
+  await sequelize.close();
 });
 
 describe('History endpoint', () => {

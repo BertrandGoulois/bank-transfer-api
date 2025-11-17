@@ -1,22 +1,22 @@
-import { sequelize } from '../models';
-import { HistoryResult, AccountRow, TransactionRow } from '../interfaces/transactions';
-import { QueryTypes, Transaction } from 'sequelize';
+import { sequelize, AccountModel, TransactionModel } from '../models';
+import { HistoryResult, TransactionRow } from '../interfaces/transactions';
+import { Transaction } from 'sequelize';
 
 const history = async (accountId: number): Promise<HistoryResult> => {
   const t: Transaction = await sequelize.transaction();
 
   try {
-    const account = await sequelize.query<AccountRow>(
-      `SELECT * FROM "Accounts" WHERE id = $id FOR UPDATE`,
-      { bind: { id: accountId }, type: QueryTypes.SELECT, transaction: t }
-    );
+    const account = await AccountModel.findByPk(accountId, {
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
 
-    if (account.length === 0) throw { status: 404, error: 'Account not found' };
+    if (!account) throw { status: 404, error: 'Account not found' };
 
-    const transactions = await sequelize.query<TransactionRow>(
-      `SELECT * FROM "Transactions" WHERE "accountId" = $id`,
-      { bind: { id: accountId }, type: QueryTypes.SELECT, transaction: t }
-    );
+    const transactions = await TransactionModel.findAll({
+      where: { accountId },
+      transaction: t,
+    });
 
     const amounts = transactions.map(t => parseFloat(t.amount));
     const averageAmount =
@@ -38,7 +38,7 @@ const history = async (accountId: number): Promise<HistoryResult> => {
     return {
       message: 'History endpoint reached',
       metrics: { averageAmount, byType, byDay },
-      transactions
+      transactions: transactions as TransactionRow[],
     };
   } catch (err) {
     await t.rollback();

@@ -1,6 +1,6 @@
-import { sequelize } from '../models';
-import { WithdrawResult, AccountRow } from '../interfaces/transactions';
-import { QueryTypes, Transaction } from 'sequelize';
+import { sequelize, AccountModel, TransactionModel } from '../models';
+import { WithdrawResult } from '../interfaces/transactions';
+import { Transaction } from 'sequelize';
 
 const withdraw = async (
   accountId: number,
@@ -9,35 +9,28 @@ const withdraw = async (
   const t: Transaction = await sequelize.transaction();
 
   try {
-    const accounts = await sequelize.query<AccountRow>(
-      `SELECT * FROM "Accounts" WHERE id = $id FOR UPDATE`,
-      {
-        bind: { id: accountId },
-        type: QueryTypes.SELECT,
-        transaction: t,
-      }
-    );
-    const account = accounts[0];
+    const account = await AccountModel.findByPk(accountId, {
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
+
     if (!account) throw { status: 404, error: 'Account not found' };
+
     if (parseFloat(account.balance) < amount)
       throw { status: 400, error: 'Insufficient balance' };
 
-    await sequelize.query(
-      `UPDATE "Accounts" SET balance = balance - $amount, "updatedAt" = NOW() WHERE id = $id`,
-      { bind: { id: accountId, amount }, transaction: t }
-    );
+    account.balance = (parseFloat(account.balance) - amount).toString();
 
-    await sequelize.query(
-      `INSERT INTO "Transactions" ("accountId","type","amount","description","createdAt","updatedAt")
-       VALUES ($accountId,'debit',$amount,$desc,NOW(),NOW())`,
+    await account.save({ transaction: t });
+
+    await TransactionModel.create(
       {
-        bind: {
-          accountId,
-          amount,
-          desc: `Withdrawal of ${amount} on account ${accountId}`,
-        },
-        transaction: t,
-      }
+        accountId,
+        type: 'debit',
+        amount: amount.toString(),
+        description: `Withdrawal of ${amount} on account ${accountId}`,
+      },
+      { transaction: t }
     );
 
     await t.commit();

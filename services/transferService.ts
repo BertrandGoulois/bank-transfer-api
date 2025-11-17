@@ -1,6 +1,6 @@
-import { sequelize } from '../models';
-import { TransferResult, AccountRow } from '../interfaces/transactions';
-import { QueryTypes, Transaction } from 'sequelize';
+import { sequelize, AccountModel, TransactionModel } from '../models';
+import { TransferResult } from '../interfaces/transactions';
+import { Transaction } from 'sequelize';
 
 const transfer = async (
   fromAccountId: number,
@@ -10,41 +10,45 @@ const transfer = async (
   const t: Transaction = await sequelize.transaction();
 
   try {
-    const fromRows = await sequelize.query<AccountRow>(
-      `SELECT * FROM "Accounts" WHERE id = $id FOR UPDATE`,
-      { bind: { id: fromAccountId }, type: QueryTypes.SELECT, transaction: t }
-    );
-    const fromAccount = fromRows[0];
+    const fromAccount = await AccountModel.findByPk(fromAccountId, {
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
     if (!fromAccount) throw { status: 404, error: 'Sender account not found' };
 
-    const toRows = await sequelize.query<AccountRow>(
-      `SELECT * FROM "Accounts" WHERE id = $id FOR UPDATE`,
-      { bind: { id: toAccountId }, type: QueryTypes.SELECT, transaction: t }
-    );
-    const toAccount = toRows[0];
+    const toAccount = await AccountModel.findByPk(toAccountId, {
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
     if (!toAccount) throw { status: 404, error: 'Receiver account not found' };
 
     if (parseFloat(fromAccount.balance) < amount)
       throw { status: 400, error: 'Insufficient balance' };
 
-    await sequelize.query(
-      `UPDATE "Accounts" SET balance = balance - $amount, "updatedAt" = NOW() WHERE id = $id`,
-      { bind: { id: fromAccountId, amount }, transaction: t }
-    );
-    await sequelize.query(
-      `UPDATE "Accounts" SET balance = balance + $amount, "updatedAt" = NOW() WHERE id = $id`,
-      { bind: { id: toAccountId, amount }, transaction: t }
+    fromAccount.balance = (parseFloat(fromAccount.balance) - amount).toString();
+    toAccount.balance = (parseFloat(toAccount.balance) + amount).toString();
+
+    await fromAccount.save({ transaction: t });
+    await toAccount.save({ transaction: t });
+
+    await TransactionModel.create(
+      {
+        accountId: fromAccountId,
+        type: 'debit',
+        amount: amount.toString(),
+        description: `Transfer to ${toAccountId}`,
+      },
+      { transaction: t }
     );
 
-    await sequelize.query(
-      `INSERT INTO "Transactions" ("accountId","type","amount","description","createdAt","updatedAt")
-       VALUES ($accountId,'debit',$amount,$desc,NOW(),NOW())`,
-      { bind: { accountId: fromAccountId, amount, desc: `Transfer to ${toAccountId}` }, transaction: t }
-    );
-    await sequelize.query(
-      `INSERT INTO "Transactions" ("accountId","type","amount","description","createdAt","updatedAt")
-       VALUES ($accountId,'credit',$amount,$desc,NOW(),NOW())`,
-      { bind: { accountId: toAccountId, amount, desc: `Transfer from ${fromAccountId}` }, transaction: t }
+    await TransactionModel.create(
+      {
+        accountId: toAccountId,
+        type: 'credit',
+        amount: amount.toString(),
+        description: `Transfer from ${fromAccountId}`,
+      },
+      { transaction: t }
     );
 
     await t.commit();

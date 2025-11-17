@@ -1,6 +1,6 @@
 {
   "name": "bank-transfer-api",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "description": "Demonstration of my logic to develop a bank transfer API",
   "main": "dist/server.js",
   "scripts": {
@@ -40,6 +40,7 @@
     "cross-env": "^7.0.3",
     "jest": "^30.2.0",
     "nodemon": "^3.1.10",
+    "sqlite3": "^5.1.7",
     "supertest": "^7.1.4",
     "ts-jest": "^29.4.5",
     "ts-node": "^10.9.2",

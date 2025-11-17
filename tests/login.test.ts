@@ -1,5 +1,5 @@
 import request from 'supertest';
-import app from '../server';
+import app from '../app';
 import { sequelize, UserModel as User } from '../models';
 import bcrypt from 'bcrypt';
 
@@ -10,6 +10,11 @@ beforeAll(async () => {
 
   const passwordHash = await bcrypt.hash('password123', 10);
   user = await User.create({ name: 'Bertrand', email: 'bertrand@mail.com', password: passwordHash });
+});
+
+
+afterAll(async () => {
+  await sequelize.close();
 });
 
 describe('Authentication', () => {

@@ -1,5 +1,5 @@
 import request from 'supertest';
-import app from '../server';
+import app from '../app';
 import { sequelize, UserModel as User, AccountModel as Account } from '../models';
 import bcrypt from 'bcrypt';
 
@@ -19,6 +19,10 @@ beforeAll(async () => {
     .post('/auth/login')
     .send({ email: 'bertrand@mail.com', password: 'password123' });
   token = res.body.token;
+});
+
+afterAll(async () => {
+  await sequelize.close();
 });
 
 describe('Withdrawal endpoint', () => {
