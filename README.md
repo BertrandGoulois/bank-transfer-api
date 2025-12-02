@@ -1,8 +1,8 @@
 # Bank API Node.js
 
-This API demonstrates the design of a banking application in Node.js exposing REST endpoints. The project follows **Test Driven Development (TDD)** and uses **Sequelize**, **Express**, **Jest**, **SQLite** for testing, and **PostgreSQL** for production.
+This API implements a banking system in Node.js exposing REST endpoints. The project is built with **TypeScript**, follows **Test Driven Development (TDD)**, and uses **Sequelize** for database interaction. **SQLite** is used for testing, **PostgreSQL** for production.
 
-All commits are descriptive to trace development, allowing clear visibility of new features, tests, and fixes. The project demonstrates structured, maintainable, and secure handling of financial transactions.
+The architecture is modular, separating domain logic, use-cases, repositories, infrastructure, and interface layers. All tests pass, and the project demonstrates maintainable, type-safe, and secure transaction handling.
 
 ---
 
@@ -17,6 +17,7 @@ All commits are descriptive to trace development, allowing clear visibility of n
 * **bcrypt** (password hashing)
 * **jsonwebtoken** (JWT authentication)
 * **TypeScript**
+* **Zod** (input validation)
 
 ---
 
@@ -30,7 +31,7 @@ cd bank-transfer-api
 npm install
 ```
 
-2. Create a `.env` file at the root with your database parameters and JWT secret:
+2. Create a `.env` file with your database credentials and JWT secret:
 
 ```
 DB_HOST=******
@@ -42,12 +43,24 @@ NODE_ENV=******
 JWT_SECRET=******
 ```
 
-> In the `test` environment, the SQLite database is used automatically for isolated testing.
+> Tests automatically use SQLite in the `test` environment. No seeding is required.
 
-3. Seed the database with sample data:
+3. Compile TypeScript:
 
 ```bash
-npm run seed
+npx tsc
+```
+
+4. Run migrations to generate database tables:
+
+```bash
+npx sequelize-cli db:migrate
+```
+
+5. (Optional) Load development data using SQL scripts:
+
+```bash
+psql -h localhost -U <DB_USER> -d <DB_NAME> -f scripts/sql/seed-dev-data.sql
 ```
 
 ---
@@ -60,6 +73,12 @@ npm run seed
 npm run dev
 ```
 
+* **Production**:
+
+```bash
+npm start
+```
+
 * **Unit tests**:
 
 ```bash
@@ -70,103 +89,203 @@ npm test
 
 ## Endpoints
 
-### 1. Money Transfer
+### Accounts
 
-* **POST** : `/accounts/:fromAccountId/transfer`
-* **Body JSON** :
+#### Get account by ID
+
+* **GET** `/accounts/:id`
+* **Response JSON**:
 
 ```json
 {
-    "toAccountId": 2,
-    "amount": 50
+  "id": 1,
+  "balance": 1000,
+  "ownerId": 1,
+  "createdAt": "2025-10-15T00:00:00.000Z",
+  "updatedAt": "2025-10-15T00:00:00.000Z"
 }
 ```
 
-* **Error cases**:
+* **Errors**:
 
-  * `404` → "Sender account not found" / "Receiver account not found"
-  * `400` → "Insufficient balance" / "Sender and receiver must be different"
-  * `400` → "Missing required fields" / "Amount must be a positive number"
+  * `400` → invalid accountId
+  * `404` → account not found
+
+#### Deposit
+
+* **POST** `/accounts/:id/deposit`
+* **Body JSON**:
+
+```json
+{
+  "accountId": 1,
+  "amount": 50
+}
+```
+
+* **Errors**:
+
+  * `400` → invalid accountId or amount
+  * `400` → other deposit errors
+
+#### Withdraw
+
+* **POST** `/accounts/:id/withdraw`
+* **Body JSON**:
+
+```json
+{
+  "accountId": 1,
+  "amount": 20
+}
+```
+
+* **Errors**:
+
+  * `400` → invalid accountId or amount
+  * `400` → insufficient funds
+
+#### Transfer
+
+* **POST** `/accounts/transfer`
+* **Body JSON**:
+
+```json
+{
+  "fromId": 1,
+  "toId": 2,
+  "amount": 50
+}
+```
+
+* **Errors**:
+
+  * `400` → invalid fields
+  * `400` → insufficient funds
+  * `404` → sender or receiver not found
 
 ---
 
-### 2. Withdrawal
+### Transactions
 
-* **POST** : `/accounts/:accountId/withdraw`
-* **Body JSON** :
+#### Get transaction by ID
+
+* **GET** `/transactions/:id`
+* **Response JSON**:
 
 ```json
 {
-    "amount": 10
+  "id": 1,
+  "accountId": 1,
+  "type": "credit",
+  "amount": 200,
+  "description": "Salary",
+  "createdAt": "2025-10-15T00:00:00.000Z"
 }
 ```
 
-* **Error cases**:
+* **Errors**:
 
-  * `404` → "Account not found"
-  * `400` → "Insufficient balance" / "Amount must be a positive number"
+  * `400` → invalid ID
+  * `404` → transaction not found
+
+#### Get all transactions by account
+
+* **GET** `/transactions/account/:accountId`
+* **Response JSON**:
+
+```json
+[
+  {
+    "id": 1,
+    "accountId": 1,
+    "type": "debit",
+    "amount": 50,
+    "description": "Transfer",
+    "createdAt": "2025-10-15T00:00:00.000Z"
+  }
+]
+```
+
+* **Errors**:
+
+  * `400` → invalid accountId
+  * `500` → failed to fetch transactions
+
+#### Get transaction statistics by account
+
+* **GET** `/transactions/stats/:accountId`
+* **Response JSON**:
+
+```json
+{
+  "total": 1000,
+  "count": 5,
+  "average": 200,
+  "byType": { "credit": 3, "debit": 2 }
+}
+```
+
+* **Errors**:
+
+  * `400` → invalid accountId
+  * `500` → failed to fetch stats
 
 ---
 
-### 3. Transaction History
+### Users
 
-* **GET** : `/accounts/:accountId/history`
-* **Response JSON** :
+#### Get user by ID
 
-```json
-{
-    "transactions": [
-        {
-            "id": 1,
-            "accountId": 1,
-            "type": "credit",
-            "amount": 200,
-            "description": "Salary",
-            "createdAt": "2025-10-15T00:00:00.000Z",
-            "updatedAt": "2025-10-15T00:00:00.000Z"
-        }
-    ],
-    "metrics": {
-        "averageAmount": 75,
-        "byType": { "credit": 2, "debit": 1 },
-        "byDay": { "2025-10-19": 3 }
-    }
-}
-```
+* **GET** `/users/id/:id`
+* **Errors**:
 
-* **Error cases**:
+  * `400` → invalid id
+  * `404` → user not found
 
-  * `404` → "Account not found"
-  * `400` → "Invalid account id"
+#### Get user by email
+
+* **GET** `/users/email/:email`
+* **Errors**:
+
+  * `400` → invalid email
+  * `404` → user not found
+
+#### List all users
+
+* **GET** `/users`
+* **Response JSON**: list of users
 
 ---
 
-### 4. Authentication
+### Authentication
 
-* **POST** : `/auth/login`
-* **Body JSON** :
+#### Login
 
-```json
-{
-    "email": "bertrand@mail.com",
-    "password": "userpassword"
-}
-```
-
-* **Response JSON** :
+* **POST** `/auth/login`
+* **Body JSON**:
 
 ```json
 {
-    "token": "<JWT token>"
+  "email": "user@mail.com",
+  "password": "password123"
 }
 ```
 
-* **Error cases**:
+* **Response JSON**:
 
-  * `401` → "Invalid credentials"
-  * `400` → "Missing required fields"
+```json
+{
+  "token": "<JWT token>"
+}
+```
 
-* **Usage**: Include the token in the `Authorization` header for protected endpoints:
+* **Errors**:
+
+  * `400` → invalid fields
+  * `401` → authentication failed
+
+* **Usage**: include JWT in `Authorization` header for protected endpoints:
 
 ```
 Authorization: Bearer <JWT token>
@@ -176,96 +295,25 @@ Authorization: Bearer <JWT token>
 
 ## Key Features
 
-* Full transaction handling: transfer and withdrawal
-* History endpoint with summary metrics (average amount, count per type, count per day)
-* Transaction safety using Sequelize transactions and locks, rollback on failure
-* JWT-based authentication with hashed passwords
-* TDD approach with Jest covering all success and error cases
-* Seed data for rapid database initialization
-* Type-safe Sequelize queries with cross-dialect support
-* English messages for API consistency
-* Migrated fully to TypeScript
-* Improved service and controller structure for maintainability
-
----
-
-## Objective
-
-This project demonstrates:
-
-* Designing tested and secure REST endpoints
-* Mastery of Sequelize for transactional operations
-* TDD-driven, reliable, and maintainable Node.js code
-* Implementation of JWT-based authentication
-* Migration from JavaScript to TypeScript for type safety
+* Full account operations: deposit, withdrawal, transfer
+* Transaction history and statistics
+* Input validation with Zod
+* JWT authentication and hashed passwords
+* TDD with Jest for success and failure cases
+* SQLite for fast test runs
+* Sequelize transactions and rollback handling
+* Type-safe TypeScript throughout
+* Modular, clean architecture separating domain, application, infrastructure, and interface
 
 ---
 
 ## Changelog / Release
 
-**v1.0.0**
+**v1.5.1** – Current
 
-**Description:**
-This release delivers a complete Node.js banking API with REST endpoints, developed using **Test Driven Development (TDD)**. It demonstrates structured transaction handling, database interaction with PostgreSQL via Sequelize, and secure transaction management.
-
-**Features included:**
-
-* **Accounts management** – checking accounts, deposits, withdrawals, transfers.
-* **Transaction history** – retrieve all transactions with synthetic metrics (average amount, count per type, count per day).
-* **Error handling** – proper HTTP codes for missing accounts, insufficient funds, and invalid operations.
-* **TDD coverage** – Jest unit tests for normal and edge cases.
-* **Seed data** – allows initializing the database for development.
-
-**Notes:**
-
-* Database configuration is currently via `config.json`.
-* Commits illustrate the step-by-step development process.
-* Ready for local development via `npm run dev` or unit testing via `npm start test`.
-
-**v1.1.0**
-
-* Replaced `config/config.json` with environment-based `.env` and dynamic `config.js`.
-* Updated Sequelize initialization to read DB credentials from `.env`.
-* Tests now automatically use `test` database in test environment.
-* Improved stability of unit tests by enforcing environment-specific DB selection.
-
-**v1.2.0**
-
-* Introduced middleware input validation for all endpoints (transfer, withdrawal, history)
-* All API messages standardized in English
-* Controllers and services split into separate files per endpoint
-* Unit tests updated to cover middleware and service errors (19/19 passing)
-* Added JSDoc comments to all service and controller functions for documentation and maintainability
-* Transactional safety ensured with `FOR UPDATE` and rollback handling
-
-**v1.3.0**
-
-* Added JWT-based authentication for users
-* Passwords are now hashed using bcrypt
-* New `/auth/login` endpoint
-* Updated middleware and unit tests to handle authentication
-* Updated README with login instructions and token usage
-* All tests passing (including authentication)
-
-**v1.4.0**
-
-* Migrated codebase and tests from JavaScript to TypeScript
-* Removed all JSDoc comments
-* All previous functionality preserved and tests passing
-* Project ready for TypeScript development
-
-**v1.4.1**
-
-* Refactored services and controllers for cleaner TypeScript usage
-* Updated Sequelize queries with proper generics and type safety
-* Removed redundant array destructuring when fetching single rows
-* Improved error handling consistency across controllers
-* No breaking API changes; tests fully passing
-
-**v1.5.0**
-
-* Tests now run on SQLite for faster, isolated test environment
-* All services refactored to use Sequelize model methods instead of raw SQL
-* Transaction handling and locks standardized via Sequelize
-* Improved cross-dialect compatibility and type safety
-* No breaking API changes; all tests passing
+* Modular architecture with domain, application, infrastructure, and interface layers
+* Removed seeding
+* All endpoints fully typed and validated
+* All tests passing on SQLite
+* Controllers and use-cases refactored for maintainability
+* Updated README with current endpoints and instructions
